@@ -9,11 +9,7 @@ const Home = () => {
   };
 
   return (
-    <div
-      className="flex flex-col justify-center items-center min-h-screen bg-cover bg-center relative"
-      style={{ backgroundImage: "url('/images/homebackground.jpeg')" }}
-    >
-      
+    <div className="min-h-screen bg-gradient-to-r from-[#faf3e0] to-[#c5a45a] text-gray-900 flex items-center justify-center text-center">
       {/* Content */}
       <div className="relative z-10 text-center px-4">
         <h1 className="text-5xl md:text-6xl font-bold text-gray-800 drop-shadow-md mb-4">
@@ -34,5 +30,3 @@ const Home = () => {
 };
 
 export default Home;
-
-
