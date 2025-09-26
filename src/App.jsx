@@ -1,78 +1,108 @@
-import React from 'react'
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
-import Home from './Pages/Home'
-import About from './Pages/About'
-import Team from './Pages/Team'
-import Product from './Pages/Product'
-import Contact from './Pages/Contact'
-import Course_Details from './Pages/Course_Details'
-import Navbar from './components/Navbar'
-import MainAdmin from './Pages/MainAdmin'
-import Dashboard from './Pages/Dashboard'
-import EmailOtp from './Authentication/EmailOtp'
-import FindHall from './HallPages/FindHall'
 
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import './App.css';
+import { AuthProvider, useAuth } from './Context/AuthContext'; 
 
-import DateTimeRangeReactDatepicker from './HallBooking/DateTimeRangeReactDatepicker'
-import CheckAvailabilityForm from './HallBooking/CheckAvailabilityForm'
-import HallBookingForm from './HallBooking/HallBookingForm'
-import EventPage from './HallBooking/EventPage' 
-import SuccessMsg from './HallBooking/SuccessMsg'
-import Login from './Authentication/Login'
-import Signup from './Authentication/Signup'
-import ForgotPass from './Authentication/ForgotPass'
-import ResetPassOtp from './Authentication/ResetPassOtp'
+// Authentication Components
+import Login from './Authentication/Login.jsx';
+import Signup from './Authentication/Signup.jsx';
+import ResetPassOtp from './Authentication/ResetPassOtp.jsx';
+import EmailOtp from './Authentication/EmailOtp.jsx';
+import ForgotPass from './Authentication/ForgotPass.jsx';
 
-// import CheckAvailabilityForm from './HallPages/CheckAvailabilityForm'
-// import HallBookingForm from './HallPages/HallBookingForm'
+// Core Components
+import Header from './components/Header.jsx';
+import Hero from './components/Hero.jsx';
+import TrendingVenues from './components/TrendingVenues.jsx';
+import Categories from './components/Categories.jsx';
+import Recommendations from './components/Recommendations.jsx';
+import Footer from './components/Footer.jsx';
+import AIAssistant from './components/AIAssistant.jsx';
 
+// HallBooking Components
+import CheckAvailabilityForm from './HallBooking/CheckAvailabilityForm.jsx';
+import DateTimeRangeReactDatePicker from './HallBooking/DateTimeRangeReactDatepicker.jsx';
+import HallBookingForm from './HallBooking/HallBookingForm.jsx';
+import SuccessMsg from './HallBooking/SuccessMsg.jsx';
 
+// HallPages Components
+import FindHall from './HallPages/FindHall.jsx';
 
-const App = () => {
-  return (
-    <Router>
-      <ConditionalNavbar />
-      <Routes>
-        <Route path='/' element={<Home />} />
-        <Route path='/About' element={<About />} />
-        <Route path='/Team' element={<Team />} />
-        <Route path='/Product' element={<Product />} />
-        <Route path='/Contact' element={<Contact />} />
-        <Route path='/Courses' element={<Product />} />
-        <Route path='/Courses/:id' element={<Course_Details />} />
-        <Route path='/MainAdmin' element={<MainAdmin />} />
-        <Route path='/Dashboard' element={<Dashboard />} />
-        <Route path='/EmailOtp' element={<EmailOtp/>} />
-        <Route path='/FindHall' element={<FindHall/>}/>
-        <Route path='Login' element={<Login />} />
-        <Route path='Signup' element={<Signup />} />  
-        <Route path='ForgotPass' element={<ForgotPass/>} />
-        <Route path='ResetPassOtp' element={<ResetPassOtp/>} />
-        
-         {/* Hall bookibg routesss */}
+// General Pages
+import About from './Pages/About.jsx';
+import Contact from './Pages/Contact.jsx';
+import VenueDetails from './Pages/VenueDetails.jsx';
 
-        <Route path='/EventPage' element={<EventPage/>}/>
-        <Route path='/DateTimeRangeReactDatepicker' element={<DateTimeRangeReactDatepicker/>}     />   
-        <Route path='/CheckAvailabilityForm' element={<CheckAvailabilityForm/>}/>
-        <Route path='/HallBookingForm' element={<HallBookingForm/>}/>
-        <Route path='/SuccessMsg' element={<SuccessMsg />} />  
-      </Routes>
-    </Router>
-  )
-}
-
- 
-const ConditionalNavbar = () => {
-  const location = useLocation()
-
- 
-  const hideNavbarRoutes = ['/MainAdmin', '/Dashboard', '/EmailOtp', '/FindHall']
-
-  if (hideNavbarRoutes.includes(location.pathname)) {
-    return null
+// --- Private Route Component ---
+const PrivateRoute = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
+  return children;
+};
 
-  return <Navbar />
+// --- Conditional Header/Footer ---
+const ConditionalHeader = () => {
+  const location = useLocation();
+  const hideOnPages = []; 
+  if (hideOnPages.includes(location.pathname)) return null;
+  return <Header />;
+};
+
+const ConditionalFooter = () => {
+  const location = useLocation();
+  const hideOnPages = ['/forgot-password', '/ResetPassOtp', '/EmailOtp', '/login', '/signup'];
+  if (hideOnPages.includes(location.pathname)) return null;
+  return <Footer />;
+};
+
+// --- App Routes ---
+const AppRoutes = () => {
+  return (
+    <div className="app-container">
+      <ConditionalHeader />
+
+      <main>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<><Hero /><TrendingVenues /><Categories /><Recommendations /></>} />
+          <Route path="/Login" element={<Login />} />
+          <Route path="/Signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPass />} />
+          <Route path="/ResetPassOtp" element={<ResetPassOtp />} />
+          <Route path="/EmailOtp" element={<EmailOtp />} />
+          <Route path="/About" element={<About />} />
+          <Route path="/Contact" element={<Contact />} />
+          <Route path="/venue/:venueId" element={<VenueDetails />} />
+
+          {/* Private Routes */}
+          <Route path="/FindHall" element={<PrivateRoute><FindHall /></PrivateRoute>} />
+          <Route path="/CheckAvailabilityForm" element={<PrivateRoute><CheckAvailabilityForm /></PrivateRoute>} />
+          <Route path="/HallBookingForm" element={<PrivateRoute><HallBookingForm /></PrivateRoute>} />
+          <Route path="/SuccessMsg" element={<PrivateRoute><SuccessMsg /></PrivateRoute>} />
+          <Route path="/DateTimeRangeReactDatePicker" element={<PrivateRoute><DateTimeRangeReactDatePicker /></PrivateRoute>} />
+        </Routes>
+      </main>
+
+      <ConditionalFooter />
+    </div>
+  );
+};
+
+// --- Main App ---
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppRoutes />
+        {/* Render AI Assistant once at the bottom */}
+        <AIAssistant />
+      </Router>
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;
