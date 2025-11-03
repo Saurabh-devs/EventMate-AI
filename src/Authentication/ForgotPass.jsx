@@ -1,78 +1,79 @@
-import React from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-const ForgotPass = () => {
-  const navigate = useNavigate();
-
-  // const goToAdmin = (e) => {
-  //   e.preventDefault();  
-  //   navigate("/Dashboard");
-  // };
-
-
-  const resetPassword = (e) => {
-    e.preventDefault();  
-    navigate("/ResetPassOtp");
-  };
-
-  return (
-    
-
-       <div
-           className="flex justify-center items-center min-h-screen bg-cover bg-center bg-fixed"
-           style={{ backgroundImage: "url('/images/adminlogin.jpg')" }}
-         >
-           <div className="bg-white w-[500px] p-8  rounded-xl shadow-lg text-center">
-      
-             <h2 className="mb-6 text-2xl font-semibold text-gray-800">
-            Reset Password
-             </h2>
-     
-             <form >
-           
-               <div className="mb-4 text-left">
-                 <label className="block mb-2 font-medium text-gray-700">
-                   Email
-                 </label>
-                 <input
-                   type="email"
-                   placeholder="Enter your email"
-                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                 />
-               </div>
-               
-               
-       
-     
-       
-               <button
-               onClick={resetPassword}
-                 type="submit"
-                 className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-300"
-               >
-               Reset 
-               </button>
-     
-        
-               {/* <button
-               onClick={goToAdmin}
-                 type="submit"
-                 className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-300"
-               >
-                 Login For Admin Dashboard
-               </button> */}
-     
-             </form>
-     
-             
-             <h2 className="mb-6 mt-2 text-left font-semibold text-gray-800">
-               Already Have an Account :    <Link className='text-red-500 text-right ml-13' to='/Login'>Login</Link>
-                <Link className='text-blue-500 ml-3' to='/Signup'>SignUp</Link>
-            
-             </h2>
-           </div>
-         </div>
-  );
+// --- Styles (Optional, you can use your own CSS) ---
+const containerStyles = {
+    display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh',
+    backgroundColor: '#f7f7f7', padding: '20px',
 };
+const formWrapperStyles = {
+    backgroundColor: '#ffffff', padding: '40px', borderRadius: '10px',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)', width: '100%',
+    maxWidth: '450px', textAlign: 'center',
+};
+const headingStyles = {
+    marginBottom: '15px', fontSize: '28px', color: '#333',
+};
+const subtextStyles = {
+    marginBottom: '30px', fontSize: '16px', color: '#666',
+};
+const inputStyles = {
+    width: '100%', padding: '12px', marginBottom: '15px', border: '1px solid #ccc',
+    borderRadius: '5px', fontSize: '16px', boxSizing: 'border-box',
+};
+const buttonStyles = {
+    width: '100%', padding: '12px', backgroundColor: '#44402bff', color: '#ffffff',
+    border: 'none', borderRadius: '5px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer',
+};
+
+// --- Component Code ---
+function ForgotPass() {
+    const [email, setEmail] = useState('');
+    const navigate = useNavigate();
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            // Step 1: Backend ko email bhejein taki wo OTP bhej sake
+            const response = await axios.post('http://localhost:8080/api/auth/forgot-password', {
+                email: email // email state se value bhej rahe hain
+            });
+
+            // Step 2: Backend se success message dikhayein
+            alert(response.data);
+
+            // Step 3: User ko agle page par bhejein aur email sath mein pass karein
+            navigate('/ResetPassOtp', { state: { email: email } });
+
+        } catch (error) {
+            alert(error.response?.data || "An error occurred. Please check the email address.");
+        }
+    };
+
+    return (
+        <div style={containerStyles}>
+            <div style={formWrapperStyles}>
+                <h1 style={headingStyles}>Forgot Your Password?</h1>
+                <p style={subtextStyles}>
+                    No worries! Just enter your email address below and we'll send you an OTP to reset it.
+                </p>
+                <form onSubmit={handleSubmit}>
+                    <input
+                        type="email"
+                        placeholder="Enter your email address"
+                        value={email} // Input ko state se joda
+                        onChange={(e) => setEmail(e.target.value)} // Har badlav par state update hoga
+                        required
+                        style={inputStyles}
+                    />
+                    <button type="submit" style={buttonStyles}>
+                        Send OTP
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+}
 
 export default ForgotPass;

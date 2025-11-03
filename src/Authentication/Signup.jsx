@@ -1,99 +1,85 @@
-import React from 'react'
-import { useNavigate,Link } from 'react-router-dom';
-
-
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import './AuthForm.css'; // Aapki CSS file
 
 const Signup = () => {
-        const navigate = useNavigate();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // Show/Hide ke liye state
+  const navigate = useNavigate();
+
+  const handleSignup = async (e) => {
+    e.preventDefault();
     
-        const goToEmailOtp = (e) => {
-          e.preventDefault();  
-          navigate("/EmailOtp");
-        };
-      
+    const user = { name, email, password };
+
+    try {
+      const response = await axios.post('http://localhost:8080/api/auth/signup', user);
+      console.log(response.data);
+      alert("Signup successful! Please login to continue.");
+      navigate('/login');
+    } catch (error) {
+      console.error("Signup failed:", error);
+      const errorMessage = error.response?.data || "Signup failed! Please try again.";
+      alert(errorMessage);
+    }
+  };
 
   return (
-       <>
-    <div
-      className="flex justify-center items-center min-h-screen bg-cover bg-center bg-fixed"
-      style={{ backgroundImage: "url('/images/adminlogin.jpg')" }}
-    >
-      <div className="bg-white w-[500px] p-8  rounded-xl shadow-lg text-center">
- 
-        <h2 className="mb-6 text-2xl font-semibold text-gray-800">
-      Sign up Here
-        </h2>
-
-        <form >
-      
-          <div className="mb-4 text-left">
-            <label className="block mb-2 font-medium text-gray-700">
-              Email
-            </label>
+    <div className="auth-container">
+      <form className="auth-form" onSubmit={handleSignup}>
+        <h2>User Sign Up</h2>
+        <div className="form-group">
+          <label htmlFor="name">Name</label>
+          <input
+            type="text"
+            id="name"
+            placeholder="Enter your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <div style={{ position: 'relative' }}>
             <input
-              type="email"
-              placeholder="Enter your email"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-            />
-          </div>
-          
-          <div className="mb-4 text-left">
-            <label className="block mb-2 font-medium text-gray-700">
-              Mobile Number
-            </label>
-            <input
-              type="email"
-              placeholder="Enter your Mobile Number"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-            />
-          </div>
- 
-          <div className="mb-6 text-left">
-            <label className="block mb-2 font-medium text-gray-700">
-              Password
-            </label>
-            <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
+              id="password"
               placeholder="Enter your password"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
             />
+            <button 
+              type="button" 
+              onClick={() => setShowPassword(!showPassword)}
+              style={{ position: 'absolute', right: '10px', top: '10px', cursor: 'pointer', border: 'none', background: 'transparent', fontSize: '18px' }}
+            >
+              {showPassword ? '👁️' : '👁️‍🗨️'}
+            </button>
           </div>
-
-  
-          <button
-          onClick={goToEmailOtp}
-            type="submit"
-            className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-300"
-          >
-           Sign Up
-          </button>
-
-   
-          {/* <button
-          onClick={goToAdmin}
-            type="submit"
-            className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-300"
-          >
-            Login For Admin Dashboard
-          </button> */}
-
-        </form>
-
-
-        <h2 className="mb-6 mt-2 text-left font-semibold text-gray-800">
-          Already Have an Account : <Link className='text-blue-500 ml-3' to='/Login'>Login</Link>
-          <Link className='text-red-500 text-right ml-16' to='/ForgotPass'>Forgot Password</Link>
-        </h2>
-
-      </div>
-        
-     
-
+        </div>
+        <button type="submit" className="auth-button">Sign Up</button>
+        <div className="auth-links">
+          <p>Already have an account? <Link to="/login">Login</Link></p>
+        </div>
+      </form>
     </div>
-       
-       </>
-  )
-}
+  );
+};
 
-
-export default Signup
+export default Signup;

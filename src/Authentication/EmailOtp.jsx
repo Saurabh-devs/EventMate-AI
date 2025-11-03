@@ -1,107 +1,157 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../Context/AuthContext'; // Make sure this path is correct
 
-const MainAdmin = () => {
-  const navigate = useNavigate();
-
-  const [emailVerified, setEmailVerified] = useState(false);
-  const [mobileVerified, setMobileVerified] = useState(false);
-
-  useEffect(() => {
-    if (emailVerified && mobileVerified) {
-      // Add delay so user sees the "Verified" button state
-      const timer = setTimeout(() => {
-        navigate("/Dashboard");
-      }, 1500); // 1.5 seconds delay
-
-      return () => clearTimeout(timer); // cleanup
-    }
-  }, [emailVerified, mobileVerified, navigate]);
-
-  const verifyEmail = (e) => {
-    e.preventDefault();
-    setEmailVerified(true);
-  };
-
-  const verifyMobile = (e) => {
-    e.preventDefault();
-    setMobileVerified(true);
-  };
-
-  return (
-    <div
-      className="flex justify-center items-center min-h-screen bg-cover bg-center bg-fixed bg-gradient-to-r from-[#faf3e0] to-[#c5a45a]"
-      
-    >
-      <div className="bg-white p-8 w-[500px] rounded-xl shadow-lg text-center">
-        <h2 className=" text-2xl font-semibold text-gray-800">
-          Authentication Page
-        </h2 >
-
-        <h2  className="mb-6 font-semibold text-green-800">Enter Otp sent to your Email and Phone</h2>
-        <form>
-          {/* Email Verification */}
-          <div className="mb-4 text-left">
-            <label className="block mb-2 font-medium text-gray-700">
-              Email Verification
-            </label>
-
-    
-
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Enter Email Otp"
-                className="flex-1 px-3 py-2 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                disabled={emailVerified} // disable after verified
-              />
-              <button
-                onClick={verifyEmail}
-                type="submit"
-                className={`px-4 py-2 ${
-                  emailVerified
-                    ? "bg-green-600 cursor-not-allowed"
-                    : "bg-[#d4af37] hover:bg-[#d4af37]"
-                } text-white font-semibold rounded-lg shadow-md transition duration-300`}
-              >
-                {emailVerified ? "Verified" : "Verify"}
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile Verification */}
-          <div className="mb-4 text-left">
-            <label className="block mb-2 font-medium text-gray-700">
-              Mobile Verification
-            </label>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Enter Mobile Otp"
-                className="w-full px-3 py-2 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                disabled={mobileVerified} // disable after verified
-              />
-              <button
-                onClick={verifyMobile}
-                type="submit"
-                className={`w-30 py-1.5 mt-0.5 ${
-                  mobileVerified
-                    ? "bg-green-600 cursor-not-allowed"
-                    : "bg-[#d4af37] hover:bg-[#d4af37]"
-                } text-white font-semibold rounded-lg shadow-md transition duration-300`}
-              >
-                {mobileVerified ? "Verified" : "Verify"}
-              </button>
-            </div>
-
-
-          </div>
-          
-        </form>
-      </div>
-    </div>
-  );
+// --- Styles ---
+const containerStyles = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '80vh',
+    backgroundColor: '#f7f7f7',
+    padding: '20px',
+};
+const formWrapperStyles = {
+    backgroundColor: '#ffffff',
+    padding: '40px',
+    borderRadius: '10px',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+    width: '100%',
+    maxWidth: '450px',
+    textAlign: 'center',
+};
+const headingStyles = {
+    marginBottom: '15px',
+    fontSize: '28px',
+    color: '#333',
+};
+const subtextStyles = {
+    marginBottom: '30px',
+    fontSize: '16px',
+    color: '#666',
+    wordBreak: 'break-word',
+};
+const inputStyles = {
+    width: '100%',
+    padding: '12px',
+    marginBottom: '25px',
+    border: '1px solid #ccc',
+    borderRadius: '5px',
+    fontSize: '20px',
+    textAlign: 'center',
+    letterSpacing: '5px',
+    boxSizing: 'border-box',
+};
+const buttonStyles = {
+    width: '100%',
+    padding: '12px',
+    backgroundColor: '#5f593cff',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '5px',
+    fontSize: '18px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s',
+};
+const disabledButtonStyles = {
+    ...buttonStyles,
+    backgroundColor: '#cccccc',
+    cursor: 'not-allowed',
+};
+const errorTextStyles = {
+    color: '#d9534f',
+    marginBottom: '15px',
+    marginTop: '-10px',
 };
 
-export default MainAdmin;
+// --- Component Code ---
+function EmailOtp() {
+    const [otp, setOtp] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { login } = useAuth();
+
+    // Use optional chaining to safely access email
+    const email = location.state?.email;
+
+    // ✅ CRITICAL FIX: The condition is now placed INSIDE the useEffect hook.
+    useEffect(() => {
+        if (!email) {
+            // If no email is passed in the state, redirect to the login page.
+            navigate('/login');
+        }
+    }, [email, navigate]);
+
+    const handleVerifySubmit = async (event) => {
+        event.preventDefault();
+        setLoading(true);
+        setError(''); // Clear previous errors on a new submission
+
+        try {
+            const response = await axios.post('http://localhost:8080/api/auth/verify-otp', { email, otp });
+            const apiToken = response.data.token;
+
+            if (apiToken) {
+                login(apiToken); // Save token to context and localStorage
+                alert("Account verified successfully!"); // This can be replaced with a more modern notification
+                navigate('/FindHall'); // Redirect to the next page
+            } else {
+                setError("Verification failed: Token not received from server.");
+            }
+        } catch (err) {
+            console.error('Verification failed:', err);
+            // Get the most specific error message from the server response
+            const errorMessage = err.response?.data?.message || err.response?.data || 'Invalid OTP or a server error occurred.';
+            setError(errorMessage);
+        } finally {
+            // This block runs whether the try succeeds or fails
+            setLoading(false);
+        }
+    };
+
+    // If there's no email, render nothing while useEffect redirects
+    if (!email) {
+        return null;
+    }
+
+    return (
+        <div style={containerStyles}>
+            <div style={formWrapperStyles}>
+                <h1 style={headingStyles}>Verify Your Account</h1>
+                <p style={subtextStyles}>
+                    An OTP has been sent to <strong>{email}</strong>. Please enter it below.
+                </p>
+                <form onSubmit={handleVerifySubmit}>
+                    <input
+                        style={inputStyles}
+                        type="text"
+                        placeholder="_ _ _ _ _ _"
+                        maxLength="6"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        required
+                    />
+
+                    {/* ✨ IMPROVEMENT: Display error message directly in the UI */}
+                    {error && <p style={errorTextStyles}>{error}</p>}
+
+                    <button
+                        type="submit"
+                        style={loading ? disabledButtonStyles : buttonStyles}
+                        disabled={loading}
+                    >
+                        {/* ✨ IMPROVEMENT: Show a loading state to the user */}
+                        {loading ? 'Verifying...' : 'Verify Account'}
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+export default EmailOtp;
