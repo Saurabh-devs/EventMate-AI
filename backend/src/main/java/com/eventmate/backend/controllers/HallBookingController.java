@@ -1,7 +1,8 @@
 package com.eventmate.backend.controllers;
 
-import java.time.format.DateTimeFormatter;
+// --- SAARI ZAROORI IMPORTS (DONO VERSION SE) ---
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter; // Surayya ke code se
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,9 +11,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping; // Surayya ke code se
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import com.eventmate.backend.models.Hall;
+import com.eventmate.backend.models.Hall; // Surayya ke code se
 import com.eventmate.backend.models.HallBooking;
 import com.eventmate.backend.models.User;
 import com.eventmate.backend.payload.request.HallBookingRequest;
@@ -30,6 +37,7 @@ public class HallBookingController {
 
     private final HallBookingService hallBookingService;
 
+    // --- SAARI ZAROORI REPOSITORIES (DONO VERSION SE) ---
     @Autowired
     private HallBookingRepository hallBookingRepository;
 
@@ -37,13 +45,14 @@ public class HallBookingController {
     private HallRepository hallRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserRepository userRepository; // Surayya ke code se
 
+    // Constructor (Aapke code se)
     public HallBookingController(HallBookingService hallBookingService) {
         this.hallBookingService = hallBookingService;
     }
 
-    // --- existing createBooking and other endpoints kept unchanged ---
+    // --- AAPKA CODE: createBooking AUR SUGGESTION LOGIC ---
     @PostMapping
     public ResponseEntity<?> createBooking(
             @RequestBody HallBookingRequest bookingRequest,
@@ -81,7 +90,7 @@ public class HallBookingController {
                             hall.getCapacity(),
                             hall.getBudget()
                     ))
-                    .limit(5)
+                    //.limit(5) // Aapne limit() ko comment kiya tha, maine waisa hi rakha hai
                     .collect(Collectors.toList());
 
             BookingConflictResponse responseBody = new BookingConflictResponse(
@@ -103,6 +112,7 @@ public class HallBookingController {
         }
     }
 
+    // --- AAPKA CODE: getBookedDates Endpoint ---
     @GetMapping("/hall/{hallId}/booked-dates")
     public ResponseEntity<List<LocalDate>> getBookedDates(@PathVariable Long hallId) {
         try {
@@ -114,14 +124,11 @@ public class HallBookingController {
         }
     }
 
-    // ---------- DTO classes for conflict suggestions (kept) ----------
+    // --- AAPKA CODE: Suggestion DTO Classes ---
     public static class BookingConflictResponse {
         private String message;
         private List<HallSuggestion> suggestions;
-        public BookingConflictResponse(String message, List<HallSuggestion> suggestions) {
-            this.message = message;
-            this.suggestions = suggestions;
-        }
+        public BookingConflictResponse(String message, List<HallSuggestion> suggestions) { this.message = message; this.suggestions = suggestions; }
         public String getMessage() { return message; }
         public List<HallSuggestion> getSuggestions() { return suggestions; }
     }
@@ -144,7 +151,7 @@ public class HallBookingController {
         public Integer getBudget() { return budget; }
     }
 
-    // ---------- BookingDetails DTO for frontend ----------
+    // --- SURAYYA KA CODE: BookingDetails DTO Class ---
     public static class BookingDetails {
         private Long hallId;
         private String hallName;
@@ -157,16 +164,16 @@ public class HallBookingController {
             this.hallAddress = hallAddress;
             this.bookingDateTime = bookingDateTime;
         }
-
         public Long getHallId() { return hallId; }
         public String getHallName() { return hallName; }
         public String getHallAddress() { return hallAddress; }
         public String getBookingDateTime() { return bookingDateTime; }
     }
 
+    // --- SURAYYA KA CODE: Date Formatter ---
     private static final DateTimeFormatter FLAT_FORMATTER = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
 
-    // ---------- NEW ENDPOINT: Get details for current authenticated user ----------
+    // --- SURAYYA KA CODE: getBookingDetailsForCurrentUser Endpoint ---
     @GetMapping("/user/details")
     public ResponseEntity<List<BookingDetails>> getBookingDetailsForCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
@@ -196,7 +203,7 @@ public class HallBookingController {
         }
     }
 
-    // ---------- Admin/test endpoint: details by explicit userId ----------
+    // --- SURAYYA KA CODE: getBookingDetailsByUserId Endpoint ---
     @GetMapping("/user/{userId}/details")
     public ResponseEntity<List<BookingDetails>> getBookingDetailsByUserId(@PathVariable Long userId) {
         try {
@@ -218,6 +225,4 @@ public class HallBookingController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
         }
     }
-
-    // ---------- other endpoints (count/list) remain intact (you already have /user and /user/count etc.) ----------
 }
